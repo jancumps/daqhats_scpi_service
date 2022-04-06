@@ -29,8 +29,8 @@ void testCode() {
 
 int main(int argc, char** argv) {
 
-	testCode();
-	return 0;
+	testCode(); // todo remove
+	return 0; // todo remove
 
 
   int portno = 0;

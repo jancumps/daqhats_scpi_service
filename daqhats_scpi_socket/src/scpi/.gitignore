@@ -1,0 +1,14 @@
+/error.c
+/expression.c
+/fifo.c
+/fifo_private.h
+/ieee488.c
+/lexer.c
+/lexer_private.h
+/minimal.c
+/parser.c
+/parser_private.h
+/scpi.g
+/units.c
+/utils.c
+/utils_private.h
