@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 		tcp::acceptor acceptor(io_service, endpoint);
 
 		DaqHatInstrument dh(atoi(argv[2]));
-		//    testOpen(dh); // todo remove
+		dh.open();
 
 		for (;;) {
 			std::string x;
@@ -70,15 +70,11 @@ int main(int argc, char** argv) {
 					uint8_t channel = std::stoi(x.substr(5, 1));
 					bool enabled = false;
 					dh.getIEPE(channel, &enabled);
-					std::cout << (int)enabled << endl;
+     	            x.replace(6,1, enabled ? "1" : "0");
 				} else if (x.compare(0, 5, "wiepe") == 0){
 					uint8_t channel = std::stoi(x.substr(5, 1));
 					uint8_t enable = std::stoi(x.substr(6, 1));
 					dh.setIEPE(channel, enable);
-				} else if (x.compare(0, 5, "testo") == 0){
-					testOpen(dh);
-				} else if (x.compare(0, 5, "testc") == 0){
-					testClose(dh);
 				}
 
 				// send reply
@@ -86,6 +82,8 @@ int main(int argc, char** argv) {
 				stream << x; // the endl is passed on from the source. << std::endl;
 			}
 		}
+		dh.close();
+
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
 	}

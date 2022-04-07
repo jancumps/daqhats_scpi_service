@@ -54,14 +54,14 @@ char instrument_payload[22]; // two last to represent \n\0
  *
 
  */
-static scpi_result_t SCPI_DigitalOutput(scpi_t * context) {
+static scpi_result_t SCPI_DaqIepe(scpi_t * context) {
 
   scpi_bool_t param1;
   int32_t numbers[1];
 
-  // retrieve the output. Can be 0 - 7
+  // retrieve the channel. Can be 0 - 1
   SCPI_CommandNumbers(context, numbers, 1, 0);
-  if (! ((numbers[0] > -1) && (numbers[0] < 8) )) {
+  if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
     SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
     return SCPI_RES_ERR;
   }
@@ -74,12 +74,12 @@ static scpi_result_t SCPI_DigitalOutput(scpi_t * context) {
 
   memset(instrument_payload, '.', sizeof(instrument_payload));
   instrument_payload[0] = 'w';
-  instrument_payload[1] = 'r';
-  instrument_payload[2] = 'i';
-  instrument_payload[3] = 't';
+  instrument_payload[1] = 'i';
+  instrument_payload[2] = 'e';
+  instrument_payload[3] = 'p';
   instrument_payload[4] = 'e';
   (instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
-  instrument_payload[6] = param1? '1' : '0';
+  instrument_payload[6] = param1 ? '1' : '0';
 
   sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
@@ -87,17 +87,18 @@ static scpi_result_t SCPI_DigitalOutput(scpi_t * context) {
 }
 
 
-int32_t digitalInput(char cIO, int32_t pin) {
+int32_t digitalInput(int32_t chan) {
   memset(instrument_payload, '.', sizeof(instrument_payload));
   instrument_payload[0] = 'r';
-  instrument_payload[1] = 'e';
-  instrument_payload[2] = 'a';
-  instrument_payload[3] = 'd';
-  (instrument_payload[4] = '0' + pin); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
+  instrument_payload[1] = 'i';
+  instrument_payload[2] = 'e';
+  instrument_payload[3] = 'p';
+  instrument_payload[4] = 'e';
+  (instrument_payload[5] = '0' + chan); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
 
   sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
-  return (instrument_payload[5] - '0');  // only works if the 0 - 1 characters in the character set are consecutive. todo: Sue me.
+  return (instrument_payload[6] - '0');  // only works if the 0 - 1 characters in the character set are consecutive. todo: Sue me.
 
 }
 
@@ -109,19 +110,19 @@ int32_t digitalInput(char cIO, int32_t pin) {
    *
 
    */
-  static scpi_result_t SCPI_DigitalInputQ(scpi_t * context) {
+  static scpi_result_t SCPI_DaqIepeQ(scpi_t * context) {
     int32_t numbers[1];
 
-    // retrieve the output. Can be 0 - 7
+    // retrieve the output. Can be 0 - 1
     SCPI_CommandNumbers(context, numbers, 1, 0);
-    if (! ((numbers[0] > -1) && (numbers[0] < 8) )) {
+    if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
       SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
       return SCPI_RES_ERR;
     }
 
 
   // parse the reply
-  SCPI_ResultBool(context, (digitalInput('i', numbers[0]) > 0) );
+  SCPI_ResultBool(context, (digitalInput(numbers[0]) > 0) );
   return SCPI_RES_OK;
 }
 
@@ -175,9 +176,9 @@ const scpi_command_t scpi_commands[] = {
 
     {.pattern = "STATus:PRESet", .callback = SCPI_StatusPreset,},
 
-    /* PiFace Digital */
-    {.pattern = "DIGItal:INPut#?", .callback = SCPI_DigitalInputQ,},
-    {.pattern = "DIGItal:OUTPut#", .callback = SCPI_DigitalOutput,},
+    /* DAQ hat */
+    {.pattern = "DAQ:IEPe#?", .callback = SCPI_DaqIepeQ,},
+    {.pattern = "DAQ:IEPe#", .callback = SCPI_DaqIepe,},
 
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
