@@ -18,9 +18,8 @@
 using boost::asio::ip::tcp;
 
 
-void testCode() {
+void testCode(DaqHatInstrument &dh) {
 	// todo: this is a temporary function to put debug code in
-	DaqHatInstrument dh(0);
 	dh.open();
 	dh.setIEPE(0, true);
 	dh.setIEPE(0, false);
@@ -29,26 +28,22 @@ void testCode() {
 
 int main(int argc, char** argv) {
 
-	testCode(); // todo remove
-	return 0; // todo remove
-
-
   int portno = 0;
 
 
   try {
-    if (argc != 2) {
-      std::cerr << "Usage: port" << std::endl;
+    if (argc != 3) {
+      std::cerr << "Usage: port daqaddress" << std::endl;
       return 1;
     }
 
     portno = atoi(argv[1]);
-
     boost::asio::io_service io_service;
-
     tcp::endpoint endpoint(tcp::v4(), (portno));
     tcp::acceptor acceptor(io_service, endpoint);
 
+    DaqHatInstrument dh(atoi(argv[2]));
+    testCode(dh); // todo remove
 
     for (;;) {
       std::string x;
