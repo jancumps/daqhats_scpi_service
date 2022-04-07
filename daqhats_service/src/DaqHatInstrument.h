@@ -84,7 +84,13 @@ public:
    */
   virtual int setIEPE( uint8_t channel, bool enable);
 
-
+  /**
+   * Queries the IEPE power supply for a channel.
+   * @param channel
+   * @param enabled
+   * @return int 0 on success
+   */
+  virtual int getIEPE(uint8_t channel, bool* enabled);
 
   /**
    * Enables trigger.

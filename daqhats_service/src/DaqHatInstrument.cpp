@@ -38,8 +38,15 @@ int DaqHatInstrument::close() {
 	return result;
 }
 
-int DaqHatInstrument::setIEPE( uint8_t channel, bool enable) {
+int DaqHatInstrument::setIEPE(uint8_t channel, bool enable) {
 	int result = mcc172_iepe_config_write(_address, channel, enable ? 1 : 0);
+	return result;
+}
+
+int DaqHatInstrument::getIEPE(uint8_t channel, bool* enabled) {
+	uint8_t config = 0U;
+	int result = mcc172_iepe_config_read(_address, channel, &config);
+	*enabled = (config == 1);
 	return result;
 }
 
