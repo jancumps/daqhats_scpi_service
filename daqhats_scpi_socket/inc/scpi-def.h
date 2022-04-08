@@ -6,7 +6,7 @@
 #define SCPI_INPUT_BUFFER_LENGTH 256
 #define SCPI_ERROR_QUEUE_SIZE 17
 #define SCPI_IDN1 "DAQHATS"
-#define SCPI_IDN2 "MMC"
+#define SCPI_IDN2 "MCC"
 #define SCPI_IDN3 NULL
 #define SCPI_IDN4 "01-02"
 
