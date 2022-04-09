@@ -159,8 +159,12 @@ static scpi_result_t SCPI_DaqSensitivityQ(scpi_t * context) {
 
 	// todo this will return more than one character !!!!
 	// parse the reply
+<<<<<<< HEAD
 	double value = strtod(&instrument_payload[6], NULL);
 	SCPI_ResultFloat(context, value);
+=======
+	SCPI_ResultBool(context, ((instrument_payload[6] - '0') > 0) );  // only works if the 0 - 1 characters in the character set are consecutive. todo: Sue me.
+>>>>>>> 1d49c02f0c8bc8d14d484cb616aa5aa900a35761
 	return SCPI_RES_OK;
 }
 
@@ -213,7 +217,11 @@ const scpi_command_t scpi_commands[] = {
     /* DAQ hat */
     {.pattern = "DAQ:IEPe#?", .callback = SCPI_DaqIepeQ,},
     {.pattern = "DAQ:IEPe#", .callback = SCPI_DaqIepe,},
+<<<<<<< HEAD
 	{.pattern = "DAQ:SENSitivity#?", .callback = SCPI_DaqSensitivityQ,},
+=======
+	{.pattern = "DAQ:SENSitivity?", .callback = SCPI_DaqSensitivityQ,},
+>>>>>>> 1d49c02f0c8bc8d14d484cb616aa5aa900a35761
 
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
