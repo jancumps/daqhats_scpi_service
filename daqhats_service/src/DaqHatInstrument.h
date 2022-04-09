@@ -93,7 +93,7 @@ public:
   virtual int getIEPE(uint8_t channel, bool* enabled);
 
   /**
-     * Queries the sensitivity value for a channel.
+     * Configures the sensitivity value for a channel.
      * @param channel
      * @param sensitivity
      * @return int 0 on success
@@ -107,6 +107,24 @@ public:
    * @return int 0 on success
    */
   virtual int getSensitivity(uint8_t channel, double* sensitivity);
+
+  /**
+     * Configures the clock value for a channel.
+     * @param source
+     * @param sampleRate
+     * @return int 0 on success
+     */
+    virtual int setClock(uint8_t source, double sampleRate);
+
+  /**
+   * Queries the clock value for a channel.
+   * @param source
+   * @param sampleRate
+   * @param synced
+   * @return int 0 on success
+   */
+  virtual int getClock(uint8_t* source, double* sampleRate, bool* synced);
+
 
   /**
    * Enables trigger.

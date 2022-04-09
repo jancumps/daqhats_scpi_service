@@ -60,6 +60,20 @@ int DaqHatInstrument::getSensitivity(uint8_t channel, double* sensitivity) {
 	return result;
 }
 
+int DaqHatInstrument::setClock(uint8_t source, double sampleRate) {
+	int result = mcc172_a_in_clock_config_write(_address, source, sampleRate);
+	return result;
+}
+
+int DaqHatInstrument::getClock(uint8_t* source, double* sampleRate, bool* synced) {
+	uint8_t sync;
+	int result = mcc172_a_in_clock_config_read(_address,
+			source, sampleRate, &sync);
+	*synced = (sync==0) ? false : true;
+	return result;
+}
+
+
 int DaqHatInstrument::enableTrigger() {
 	// todo
 	return -1;
