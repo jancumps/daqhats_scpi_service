@@ -96,9 +96,9 @@ int main(int argc, char** argv) {
 					double sensitivity = std::stod(x.substr(6));
 					dh.setSensitivity(getChannel(x), sensitivity);
 				} else if (x.compare(0, 5, "rclck") == 0) { // clock
+					uint8_t source = 0;
 					double sampleRate = 0.0;
 					bool synced = false;
-					uint8_t source = 0;
 					dh.getClock(&source, &sampleRate, &synced);
 					x.replace(6, 1, synced ? "1" : "0");
 					x.replace(7, 1, std::to_string(source));
