@@ -42,6 +42,16 @@ uint8_t getChannel(std::string payload) {
 	return std::stoi(payload.substr(5, 1));
 }
 
+std::string formatDouble(double d) {
+	std::ostringstream streamObj;
+	// Set Fixed -Point Notation
+	streamObj << std::fixed;
+	//Add double to stream
+	streamObj << d;
+	// Get string from output string stream
+	return streamObj.str();
+}
+
 int main(int argc, char** argv) {
 
 	int portno = 0;
@@ -80,14 +90,11 @@ int main(int argc, char** argv) {
 				} else if (x.compare(0, 5, "rsens") == 0) { // sensitivity
 					double sens = 0.0;
 					dh.getSensitivity(getChannel(x), &sens);
-					std::ostringstream streamObj;
-					// Set Fixed -Point Notation
-					streamObj << std::fixed;
-					//Add double to stream
-					streamObj << sens;
-					// Get string from output string stream
-					std::string d = streamObj.str();
+					std::string d = formatDouble(sens);
 					x.replace(6, d.length(), d);
+				} else if (x.compare(0, 5, "wsens") == 0){
+					double sensitivity = std::stod(x.substr(6));
+					dh.setSensitivity(getChannel(x), sensitivity);
 				}
 
 				// send reply
