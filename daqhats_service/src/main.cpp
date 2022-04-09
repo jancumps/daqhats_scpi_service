@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <boost/asio.hpp>
 
@@ -37,7 +38,9 @@ void testClose(DaqHatInstrument &dh) {
 	dh.close();
 }
 
-
+uint8_t getChannel(std::string payload) {
+	return std::stoi(payload.substr(5, 1));
+}
 
 int main(int argc, char** argv) {
 
@@ -66,15 +69,25 @@ int main(int argc, char** argv) {
 
 				// process the commands
 
-				if (x.compare(0, 5, "riepe") == 0) {
-					uint8_t channel = std::stoi(x.substr(5, 1));
+
+				if (x.compare(0, 5, "riepe") == 0) { // IEPE
 					bool enabled = false;
-					dh.getIEPE(channel, &enabled);
+					dh.getIEPE(getChannel(x), &enabled);
      	            x.replace(6,1, enabled ? "1" : "0");
 				} else if (x.compare(0, 5, "wiepe") == 0){
-					uint8_t channel = std::stoi(x.substr(5, 1));
 					uint8_t enable = std::stoi(x.substr(6, 1));
-					dh.setIEPE(channel, enable);
+					dh.setIEPE(getChannel(x), enable);
+				} else if (x.compare(0, 5, "rsens") == 0) { // sensitivity
+					double sens = 0.0;
+					dh.getSensitivity(getChannel(x), &sens);
+					std::ostringstream streamObj;
+					// Set Fixed -Point Notation
+					streamObj << std::fixed;
+					//Add double to stream
+					streamObj << sens;
+					// Get string from output string stream
+					std::string d = streamObj.str();
+					x.replace(6, d.length(), d);
 				}
 
 				// send reply

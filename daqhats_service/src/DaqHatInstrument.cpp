@@ -50,6 +50,11 @@ int DaqHatInstrument::getIEPE(uint8_t channel, bool* enabled) {
 	return result;
 }
 
+int DaqHatInstrument::getSensitivity(uint8_t channel, double* sensitivity) {
+	int result = mcc172_a_in_sensitivity_read(_address, channel, sensitivity);
+	return result;
+}
+
 int DaqHatInstrument::enableTrigger() {
 	// todo
 	return -1;

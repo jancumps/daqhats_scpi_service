@@ -110,25 +110,59 @@ int32_t digitalInput(int32_t chan) {
    *
 
    */
-  static scpi_result_t SCPI_DaqIepeQ(scpi_t * context) {
-    int32_t numbers[1];
+static scpi_result_t SCPI_DaqIepeQ(scpi_t * context) {
+	int32_t numbers[1];
 
-    // retrieve the output. Can be 0 - 1
-    SCPI_CommandNumbers(context, numbers, 1, 0);
-    if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
-      SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
-      return SCPI_RES_ERR;
-    }
+	// retrieve the output. Can be 0 - 1
+	SCPI_CommandNumbers(context, numbers, 1, 0);
+	if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
+		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+		return SCPI_RES_ERR;
+	}
+
+	memset(instrument_payload, '.', sizeof(instrument_payload));
+	instrument_payload[0] = 'r';
+	instrument_payload[1] = 'i';
+	instrument_payload[2] = 'e';
+	instrument_payload[3] = 'p';
+	instrument_payload[4] = 'e';
+	(instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
+
+	sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
 
-  // parse the reply
-  SCPI_ResultBool(context, (digitalInput(numbers[0]) > 0) );
-  return SCPI_RES_OK;
+	// parse the reply
+	SCPI_ResultBool(context, ((instrument_payload[6] - '0') > 0) );  // only works if the 0 - 1 characters in the character set are consecutive. todo: Sue me.
+	return SCPI_RES_OK;
 }
 
 
+static scpi_result_t SCPI_DaqSensitivityQ(scpi_t * context) {
+	int32_t numbers[1];
 
+	// retrieve the output. Can be 0 - 1
+	SCPI_CommandNumbers(context, numbers, 1, 0);
+	if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
+		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+		return SCPI_RES_ERR;
+	}
 
+	memset(instrument_payload, '.', sizeof(instrument_payload));
+	instrument_payload[0] = 'r';
+	instrument_payload[1] = 's';
+	instrument_payload[2] = 'e';
+	instrument_payload[3] = 'n';
+	instrument_payload[4] = 's';
+	(instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
+
+	sendToInstrument(instrument_payload, sizeof(instrument_payload));
+
+	// todo this will return more than one character !!!!
+	// parse the reply
+	double value = strtod(&instrument_payload[6], NULL);
+	SCPI_ResultFloat(context, value);
+	return SCPI_RES_OK;
+}
 
 
 /**
@@ -179,6 +213,7 @@ const scpi_command_t scpi_commands[] = {
     /* DAQ hat */
     {.pattern = "DAQ:IEPe#?", .callback = SCPI_DaqIepeQ,},
     {.pattern = "DAQ:IEPe#", .callback = SCPI_DaqIepe,},
+	{.pattern = "DAQ:SENSitivity#?", .callback = SCPI_DaqSensitivityQ,},
 
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 

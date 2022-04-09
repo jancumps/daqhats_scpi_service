@@ -93,6 +93,14 @@ public:
   virtual int getIEPE(uint8_t channel, bool* enabled);
 
   /**
+   * Queries the sensitivity value for a channel.
+   * @param channel
+   * @param sensitivity
+   * @return int 0 on success
+   */
+  virtual int getSensitivity(uint8_t channel, double* sensitivity);
+
+  /**
    * Enables trigger.
    *
    * Example:
