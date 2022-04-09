@@ -95,6 +95,19 @@ int main(int argc, char** argv) {
 				} else if (x.compare(0, 5, "wsens") == 0){
 					double sensitivity = std::stod(x.substr(6));
 					dh.setSensitivity(getChannel(x), sensitivity);
+				} else if (x.compare(0, 5, "rclck") == 0) { // clock
+					double sampleRate = 0.0;
+					bool synced = false;
+					uint8_t source = 0;
+					dh.getClock(&source, &sampleRate, &synced);
+					x.replace(6, 1, synced ? "1" : "0");
+					x.replace(7, 1, std::to_string(source));
+					std::string d = formatDouble(sampleRate);
+					x.replace(8, d.length(), d);
+				} else if (x.compare(0, 5, "wclck") == 0){
+					uint8_t source = std::stoi(x.substr(6, 1));
+					double sampleRate = std::stod(x.substr(7));
+					dh.setClock(source, sampleRate);
 				}
 
 				// send reply
