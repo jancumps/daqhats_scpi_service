@@ -28,16 +28,6 @@ void testCode(DaqHatInstrument &dh) {
 }
 
 
-void testOpen(DaqHatInstrument &dh) {
-	// todo: this is a temporary function to put debug code in
-	dh.open();
-}
-
-void testClose(DaqHatInstrument &dh) {
-	// todo: this is a temporary function to put debug code in
-	dh.close();
-}
-
 uint8_t getChannel(std::string* payload) {
 	return std::stoi(payload->substr(5, 1));
 }
