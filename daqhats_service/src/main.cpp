@@ -90,8 +90,12 @@ int main(int argc, char** argv) {
 					rsens(dh, &x);
 				} else if (x.compare(0, 5, "wsens") == 0){
 					wsens(dh, &x);
-				} else if (x.compare(0, 5, "rclck") == 0) { // clock
-					rclck(dh, &x);
+				} else if (x.compare(0, 5, "rclso") == 0) { // clock
+					rclso(dh, &x);
+				} else if (x.compare(0, 5, "rclsa") == 0) {
+					rclsa(dh, &x);
+				} else if (x.compare(0, 5, "rclsy") == 0) {
+					rclsy(dh, &x);
 				} else if (x.compare(0, 5, "wclck") == 0){
 					wclck(dh, &x);
 				}
@@ -131,15 +135,30 @@ void wsens(DaqHatInstrument &dh, std::string* x) {
 	dh.setSensitivity(getChannel(x), sensitivity);
 }
 
-void rclck(DaqHatInstrument &dh, std::string* x) {
+void rclso(DaqHatInstrument &dh, std::string* x) {
+	uint8_t source = 0;
+	double sampleRate = 0.0;
+	bool synced = false;
+	dh.getClock(&source, &sampleRate, &synced);
+	x->replace(6, 1, std::to_string(source));
+}
+
+void rclsa(DaqHatInstrument &dh, std::string* x) {
+	uint8_t source = 0;
+	double sampleRate = 0.0;
+	bool synced = false;
+	dh.getClock(&source, &sampleRate, &synced);
+	std::string d = formatDouble(sampleRate);
+	x->replace(6, d.length(), d);
+}
+
+void rclsy(DaqHatInstrument &dh, std::string* x) {
 	uint8_t source = 0;
 	double sampleRate = 0.0;
 	bool synced = false;
 	dh.getClock(&source, &sampleRate, &synced);
 	x->replace(6, 1, synced ? "1" : "0");
-	x->replace(7, 1, std::to_string(source));
-	std::string d = formatDouble(sampleRate);
-	x->replace(8, d.length(), d);}
+}
 
 void wclck(DaqHatInstrument &dh, std::string* x) {
 	uint8_t source = std::stoi(x->substr(6, 1));
