@@ -168,14 +168,6 @@ static scpi_result_t SCPI_DaqSensitivityQ(scpi_t * context) {
 static scpi_result_t SCPI_DaqClock(scpi_t * context) {
   uint32_t param1; // source
   double param2; // sample rate
-  int32_t numbers[1];
-
-  // retrieve the channel. Can be 0 - 1
-  SCPI_CommandNumbers(context, numbers, 1, 0);
-  if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
-    SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
-    return SCPI_RES_ERR;
-  }
 
   /* read first parameter if present */
   if (!SCPI_ParamUInt32(context, &param1, TRUE)) {
@@ -186,16 +178,14 @@ static scpi_result_t SCPI_DaqClock(scpi_t * context) {
     return SCPI_RES_ERR;
   }
 
-
   memset(instrument_payload, '.', sizeof(instrument_payload));
   instrument_payload[0] = 'w';
   instrument_payload[1] = 'c';
   instrument_payload[2] = 'l';
   instrument_payload[3] = 'c';
   instrument_payload[4] = 'k';
-  (instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
-  (instrument_payload[6] = '0' + param1); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
-  sprintf(&instrument_payload[7], "%lf", param3);
+  (instrument_payload[5] = '0' + param1); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
+  sprintf(&instrument_payload[6], "%lf", param2);
 
   sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
@@ -204,79 +194,49 @@ static scpi_result_t SCPI_DaqClock(scpi_t * context) {
 
 
 static scpi_result_t SCPI_DaqClockSourceQ(scpi_t * context) {
-	int32_t numbers[1];
-
-	// retrieve the output. Can be 0 - 1
-	SCPI_CommandNumbers(context, numbers, 1, 0);
-	if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
-		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
-		return SCPI_RES_ERR;
-	}
-
 	memset(instrument_payload, '.', sizeof(instrument_payload));
 	instrument_payload[0] = 'r';
 	instrument_payload[1] = 'c';
 	instrument_payload[2] = 'l';
 	instrument_payload[3] = 's';
 	instrument_payload[4] = 'o';
-	(instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
 
 	sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
 	// parse the reply
-	uint32_t value = strtou(&instrument_payload[8], NULL);
+	uint32_t value = instrument_payload[5] - '0';
 	SCPI_ResultUInt32(context, value);
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t SCPI_DaqClockSampleRateQ(scpi_t * context) {
-	int32_t numbers[1];
-
-	// retrieve the output. Can be 0 - 1
-	SCPI_CommandNumbers(context, numbers, 1, 0);
-	if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
-		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
-		return SCPI_RES_ERR;
-	}
-
 	memset(instrument_payload, '.', sizeof(instrument_payload));
 	instrument_payload[0] = 'r';
 	instrument_payload[1] = 'c';
 	instrument_payload[2] = 'l';
 	instrument_payload[3] = 's';
 	instrument_payload[4] = 'a';
-	(instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
 
 	sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
 	// parse the reply
-	double value = strtod(&instrument_payload[6], NULL);
+	double value = strtod(&instrument_payload[5], NULL);
 	SCPI_ResultFloat(context, value);
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t SCPI_DaqClockSourceSyncQ(scpi_t * context) {
-	int32_t numbers[1];
-
-	// retrieve the output. Can be 0 - 1
-	SCPI_CommandNumbers(context, numbers, 1, 0);
-	if (! ((numbers[0] > -1) && (numbers[0] < 2) )) {
-		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
-		return SCPI_RES_ERR;
-	}
-
+static scpi_result_t SCPI_DaqClockSyncQ(scpi_t * context) {
 	memset(instrument_payload, '.', sizeof(instrument_payload));
 	instrument_payload[0] = 'r';
 	instrument_payload[1] = 'c';
 	instrument_payload[2] = 'l';
 	instrument_payload[3] = 's';
 	instrument_payload[4] = 'y';
-	(instrument_payload[5] = '0' + numbers[0]); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
 
 	sendToInstrument(instrument_payload, sizeof(instrument_payload));
 
 	// parse the reply
-	SCPI_ResultBool(context, ((instrument_payload[6] - '0') > 0) );  // only works if the 0 - 1 characters in the character set are consecutive. todo: Sue me.
+	SCPI_ResultBool(context, ((instrument_payload[5] - '0') > 0) );  // only works if the 0 - 1 characters in the character set are consecutive. todo: Sue me.
 	return SCPI_RES_OK;
 }
 
@@ -330,10 +290,10 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "DAQ:IEPe#", .callback = SCPI_DaqIepe,},
 	{.pattern = "DAQ:SENSitivity#?", .callback = SCPI_DaqSensitivityQ,},
 	{.pattern = "DAQ:SENSitivity#", .callback = SCPI_DaqSensitivity,},
-	{.pattern = "DAQ:CLOCk#:SOURce?", .callback = SCPI_DaqClockSourceQ,},
-	{.pattern = "DAQ:CLOCk#:SAMPlerate?", .callback = SCPI_DaqClockSampleRateQ,},
-	{.pattern = "DAQ:CLOCk#:SYNCed?", .callback = SCPI_DaqClockSyncQ,},
-	{.pattern = "DAQ:CLOCk#", .callback = SCPI_DaqClock,},
+	{.pattern = "DAQ:CLOCk:SOURce?", .callback = SCPI_DaqClockSourceQ,},
+	{.pattern = "DAQ:CLOCk:SAMPlerate?", .callback = SCPI_DaqClockSampleRateQ,},
+	{.pattern = "DAQ:CLOCk:SYNCed?", .callback = SCPI_DaqClockSyncQ,},
+	{.pattern = "DAQ:CLOCk", .callback = SCPI_DaqClock,},
 
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 

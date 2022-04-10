@@ -132,7 +132,7 @@ void rclso(DaqHatInstrument &dh, std::string* x) {
 	double sampleRate = 0.0;
 	bool synced = false;
 	dh.getClock(&source, &sampleRate, &synced);
-	x->replace(6, 1, std::to_string(source));
+	x->replace(5, 1, std::to_string(source));
 }
 
 void rclsa(DaqHatInstrument &dh, std::string* x) {
@@ -141,7 +141,7 @@ void rclsa(DaqHatInstrument &dh, std::string* x) {
 	bool synced = false;
 	dh.getClock(&source, &sampleRate, &synced);
 	std::string d = formatDouble(sampleRate);
-	x->replace(6, d.length(), d);
+	x->replace(5, d.length(), d);
 }
 
 void rclsy(DaqHatInstrument &dh, std::string* x) {
@@ -149,11 +149,11 @@ void rclsy(DaqHatInstrument &dh, std::string* x) {
 	double sampleRate = 0.0;
 	bool synced = false;
 	dh.getClock(&source, &sampleRate, &synced);
-	x->replace(6, 1, synced ? "1" : "0");
+	x->replace(5, 1, synced ? "1" : "0");
 }
 
 void wclck(DaqHatInstrument &dh, std::string* x) {
-	uint8_t source = std::stoi(x->substr(6, 1));
-	double sampleRate = std::stod(x->substr(7));
+	uint8_t source = std::stoi(x->substr(5, 1));
+	double sampleRate = std::stod(x->substr(6));
 	dh.setClock(source, sampleRate);
 }
