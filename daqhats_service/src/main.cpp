@@ -46,7 +46,9 @@ void riepe(DaqHatInstrument &dh, std::string* x);
 void wiepe(DaqHatInstrument &dh, std::string* x);
 void rsens(DaqHatInstrument &dh, std::string* x);
 void wsens(DaqHatInstrument &dh, std::string* x);
-void rclck(DaqHatInstrument &dh, std::string* x);
+void rclso(DaqHatInstrument &dh, std::string* x);
+void rclsa(DaqHatInstrument &dh, std::string* x);
+void rclsy(DaqHatInstrument &dh, std::string* x);
 void wclck(DaqHatInstrument &dh, std::string* x);
 
 int main(int argc, char** argv) {
