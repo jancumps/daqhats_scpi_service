@@ -126,6 +126,12 @@ public:
   virtual int getClock(uint8_t* source, double* sampleRate, bool* synced);
 
 
+  virtual int startScan(uint8_t channel_mask, uint32_t samples_per_channel, uint32_t options);
+
+  virtual int stopScan();
+
+  virtual int cleanupScan();
+
   /**
    * Enables trigger.
    *

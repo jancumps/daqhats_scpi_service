@@ -50,6 +50,9 @@ void rclso(DaqHatInstrument &dh, std::string* x);
 void rclsa(DaqHatInstrument &dh, std::string* x);
 void rclsy(DaqHatInstrument &dh, std::string* x);
 void wclck(DaqHatInstrument &dh, std::string* x);
+void wscst(DaqHatInstrument &dh, std::string* x);
+void wscsp(DaqHatInstrument &dh, std::string* x);
+void wsccl(DaqHatInstrument &dh, std::string* x);
 
 int main(int argc, char** argv) {
 	int portno = 0;
@@ -90,6 +93,12 @@ int main(int argc, char** argv) {
 					rclsy(dh, &x);
 				} else if (x.compare(0, 5, "wclck") == 0){
 					wclck(dh, &x);
+				} else if (x.compare(0, 5, "wscst") == 0){ // scan start
+					wscst(dh, &x);
+				} else if (x.compare(0, 5, "wscsp") == 0){ // scan stop
+					wscsp(dh, &x);
+				} else if (x.compare(0, 5, "wsccl") == 0){ // scan clean
+					wsccl(dh, &x);
 				}
 
 				// send reply
@@ -156,4 +165,19 @@ void wclck(DaqHatInstrument &dh, std::string* x) {
 	uint8_t source = std::stoi(x->substr(5, 1));
 	double sampleRate = std::stod(x->substr(6));
 	dh.setClock(source, sampleRate);
+}
+
+void wscst(DaqHatInstrument &dh, std::string* x) {
+	uint8_t channel_mask = std::stoi(x->substr(5, 1));
+	uint32_t options = std::stoi(x->substr(6,2), nullptr, 16);
+	uint32_t samples_per_channel = std::stoi(x->substr(8));
+	dh.startScan(channel_mask, samples_per_channel, options);
+}
+
+void wscsp(DaqHatInstrument &dh, std::string* x) {
+	dh.stopScan();
+}
+
+void wsccl(DaqHatInstrument &dh, std::string* x) {
+	dh.cleanupScan();
 }

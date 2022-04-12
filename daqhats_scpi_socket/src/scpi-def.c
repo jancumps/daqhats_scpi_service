@@ -173,6 +173,7 @@ static scpi_result_t SCPI_DaqClock(scpi_t * context) {
   if (!SCPI_ParamUInt32(context, &param1, TRUE)) {
     return SCPI_RES_ERR;
   }
+
   /* read second parameter if present */
   if (!SCPI_ParamDouble(context, &param2, TRUE)) {
     return SCPI_RES_ERR;
@@ -240,6 +241,72 @@ static scpi_result_t SCPI_DaqClockSyncQ(scpi_t * context) {
 	return SCPI_RES_OK;
 }
 
+static scpi_result_t SCPI_DaqScanStart(scpi_t * context) {
+
+	  uint32_t param1; // channel mask
+	  uint32_t param2; // buffer size
+	  uint32_t param3; // options
+
+	  /* read first parameter if present */
+	  if (!SCPI_ParamUInt32(context, &param1, TRUE)) {
+	    return SCPI_RES_ERR;
+	  }
+
+	  /* read second parameter if present */
+	  if (!SCPI_ParamUInt32(context, &param2, TRUE)) {
+	    return SCPI_RES_ERR;
+	  }
+
+	  /* read third parameter if present */
+	  if (!SCPI_ParamUInt32(context, &param3, TRUE)) {
+	    return SCPI_RES_ERR;
+	  }
+
+
+  memset(instrument_payload, '.', sizeof(instrument_payload));
+  instrument_payload[0] = 'w';
+  instrument_payload[1] = 's';
+  instrument_payload[2] = 'c';
+  instrument_payload[3] = 's';
+  instrument_payload[4] = 't';
+  (instrument_payload[5] = '0' + param1); // only works if the 0 - 7 characters in the character set are consecutive. todo: Sue me.
+  sprintf(&instrument_payload[6], "%02X", param3); // in hex, and guaranteed 2 positions
+  sprintf(&instrument_payload[8], "%d", param2);
+
+
+  sendToInstrument(instrument_payload, sizeof(instrument_payload));
+
+  return SCPI_RES_OK;
+}
+
+static scpi_result_t SCPI_DaqScanStop(scpi_t * context) {
+
+  memset(instrument_payload, '.', sizeof(instrument_payload));
+  instrument_payload[0] = 'w';
+  instrument_payload[1] = 's';
+  instrument_payload[2] = 'c';
+  instrument_payload[3] = 's';
+  instrument_payload[4] = 'p';
+
+  sendToInstrument(instrument_payload, sizeof(instrument_payload));
+
+  return SCPI_RES_OK;
+}
+
+static scpi_result_t SCPI_DaqScanCleanup(scpi_t * context) {
+
+  memset(instrument_payload, '.', sizeof(instrument_payload));
+  instrument_payload[0] = 'w';
+  instrument_payload[1] = 's';
+  instrument_payload[2] = 'c';
+  instrument_payload[3] = 'c';
+  instrument_payload[4] = 'l';
+
+  sendToInstrument(instrument_payload, sizeof(instrument_payload));
+
+  return SCPI_RES_OK;
+}
+
 /**
  * Reimplement IEEE488.2 *TST?
  *
@@ -294,6 +361,9 @@ const scpi_command_t scpi_commands[] = {
 	{.pattern = "DAQ:CLOCk:SAMPlerate?", .callback = SCPI_DaqClockSampleRateQ,},
 	{.pattern = "DAQ:CLOCk:SYNCed?", .callback = SCPI_DaqClockSyncQ,},
 	{.pattern = "DAQ:CLOCk", .callback = SCPI_DaqClock,},
+	{.pattern = "DAQ:SCAN:STArt", .callback = SCPI_DaqScanStart,},
+	{.pattern = "DAQ:SCAN:STOp", .callback = SCPI_DaqScanStop,},
+	{.pattern = "DAQ:SCAN:CLEanup", .callback = SCPI_DaqScanCleanup,},
 
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 

@@ -73,6 +73,20 @@ int DaqHatInstrument::getClock(uint8_t* source, double* sampleRate, bool* synced
 	return result;
 }
 
+int DaqHatInstrument::startScan(uint8_t channel_mask, uint32_t samples_per_channel, uint32_t options){
+	int result = mcc172_a_in_scan_start(_address, channel_mask, samples_per_channel, options);
+	return result;
+}
+
+int DaqHatInstrument::stopScan() {
+	int result = mcc172_a_in_scan_stop(_address);
+	return result;
+}
+
+int DaqHatInstrument::cleanupScan() {
+	int result = mcc172_a_in_scan_cleanup(_address);
+	return result;
+}
 
 int DaqHatInstrument::enableTrigger() {
 	// todo
