@@ -78,6 +78,16 @@ int DaqHatInstrument::startScan(uint8_t channel_mask, uint32_t samples_per_chann
 	return result;
 }
 
+int DaqHatInstrument::readScan(uint16_t * status, int32_t samples_per_channel, double timeout, double * buffer, uint32_t buffer_size_samples, uint32_t * samples_read_per_channel) {
+	int result = mcc172_a_in_scan_read(_address, status, samples_per_channel, timeout, buffer, buffer_size_samples, samples_read_per_channel);
+	return result;
+}
+
+int DaqHatInstrument::scanChannelCount() {
+	int result = mcc172_a_in_scan_channel_count(_address);
+	return result;
+}
+
 int DaqHatInstrument::stopScan() {
 	int result = mcc172_a_in_scan_stop(_address);
 	return result;

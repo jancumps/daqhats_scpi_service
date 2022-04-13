@@ -9,12 +9,14 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <boost/asio.hpp>
 
 
 #include <stdlib.h>
 
 #include "DaqHatInstrument.h"
+#include <daqhats/daqhats.h>
 
 using boost::asio::ip::tcp;
 
@@ -42,13 +44,16 @@ void rclso(DaqHatInstrument &dh, std::string* x);
 void rclsa(DaqHatInstrument &dh, std::string* x);
 void rclsy(DaqHatInstrument &dh, std::string* x);
 void wclck(DaqHatInstrument &dh, std::string* x);
-void wscst(DaqHatInstrument &dh, std::string* x);
+void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread* scanThread);
 void wscsp(DaqHatInstrument &dh, std::string* x);
 void wsccl(DaqHatInstrument &dh, std::string* x);
+
+void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, uint32_t samples_per_channel);
 
 int main(int argc, char** argv) {
 	int commandportno = 0;
 	int dataportno = 0;
+	thread* scanThread = nullptr;
 
 	try {
 		if (argc != 4) {
@@ -72,7 +77,6 @@ int main(int argc, char** argv) {
 		for (;;) {
 			std::string x;
 			tcp::iostream commandstream;
-			tcp::iostream datastream;
 			commandacceptor.accept(*commandstream.rdbuf());
 			while (commandstream >> x) {
 				// process the commands
@@ -93,11 +97,14 @@ int main(int argc, char** argv) {
 				} else if (x.compare(0, 5, "wclck") == 0){
 					wclck(dh, &x);
 				} else if (x.compare(0, 5, "wscst") == 0){ // scan start
-					wscst(dh, &x);
+					wscst(dh, &x, &dataacceptor, scanThread);
+
+
 				} else if (x.compare(0, 5, "wscsp") == 0){ // scan stop
 					wscsp(dh, &x);
 				} else if (x.compare(0, 5, "wsccl") == 0){ // scan clean
 					wsccl(dh, &x);
+					delete scanThread;
 				}
 
 				// send reply
@@ -166,11 +173,18 @@ void wclck(DaqHatInstrument &dh, std::string* x) {
 	dh.setClock(source, sampleRate);
 }
 
-void wscst(DaqHatInstrument &dh, std::string* x) {
+void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread* scanThread) {
 	uint8_t channel_mask = std::stoi(x->substr(5, 1));
 	uint32_t options = std::stoi(x->substr(6,2), nullptr, 16);
 	uint32_t samples_per_channel = std::stoi(x->substr(8));
 	dh.startScan(channel_mask, samples_per_channel, options);
+
+	// This thread is launched by using
+    // function pointer as callable
+	scanThread = new thread(scan, &dh, dataacceptor, samples_per_channel);
+	scanThread->detach();
+
+
 }
 
 void wscsp(DaqHatInstrument &dh, std::string* x) {
@@ -179,4 +193,53 @@ void wscsp(DaqHatInstrument &dh, std::string* x) {
 
 void wsccl(DaqHatInstrument &dh, std::string* x) {
 	dh.cleanupScan();
+}
+
+
+void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, uint32_t samples_per_channel) {
+	tcp::iostream datastream;
+	dataacceptor->accept(*datastream.rdbuf());
+	int num_channels = dh->scanChannelCount();
+
+	uint32_t buffer_size = samples_per_channel * num_channels;
+	double read_buf[buffer_size];
+	int total_samples_read = 0;
+
+	int32_t read_request_size = -1;     // read all available samples
+	double timeout = 5.0;
+
+	double scan_rate = 0;
+	bool synced = false; // not needed
+	uint8_t source = 0; // not needed
+		dh->getClock(&source, &scan_rate, &synced);
+
+    uint16_t read_status = 0;
+    uint32_t samples_read_per_channel = 0;    int result;
+
+    do
+    {
+        // Read the specified number of samples.
+        result = dh->readScan(&read_status, read_request_size,
+            timeout, read_buf, buffer_size, &samples_read_per_channel);
+        if (read_status & STATUS_HW_OVERRUN)
+        {
+            break;
+        }
+        else if (read_status & STATUS_BUFFER_OVERRUN)
+        {
+            break;
+        }
+
+        total_samples_read += samples_read_per_channel;
+
+        for (uint32_t i = 0; i < samples_read_per_channel; i++) {
+        	datastream << formatDouble(read_buf[i]) << std::endl;
+        }
+
+//        usleep(100000);
+    }
+    while ((result == RESULT_SUCCESS) &&
+           ((read_status & STATUS_RUNNING) == STATUS_RUNNING) );
+
+
 }

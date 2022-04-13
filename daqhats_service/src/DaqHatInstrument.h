@@ -126,7 +126,14 @@ public:
   virtual int getClock(uint8_t* source, double* sampleRate, bool* synced);
 
 
-  virtual int startScan(uint8_t channel_mask, uint32_t samples_per_channel, uint32_t options);
+  virtual int startScan(uint8_t channel_mask, uint32_t samples_per_channel,
+		  uint32_t options);
+
+  virtual int readScan(uint16_t * status, int32_t samples_per_channel,
+		  double timeout, double * buffer, uint32_t buffer_size_samples,
+		  uint32_t * samples_read_per_channel);
+
+  virtual int scanChannelCount();
 
   virtual int stopScan();
 
