@@ -19,14 +19,6 @@
 using boost::asio::ip::tcp;
 
 
-void testCode(DaqHatInstrument &dh) {
-	// todo: this is a temporary function to put debug code in
-	dh.open();
-	dh.setIEPE(0, true);
-	dh.setIEPE(0, false);
-	dh.close();
-}
-
 
 uint8_t getChannel(std::string* payload) {
 	return std::stoi(payload->substr(5, 1));
@@ -55,27 +47,34 @@ void wscsp(DaqHatInstrument &dh, std::string* x);
 void wsccl(DaqHatInstrument &dh, std::string* x);
 
 int main(int argc, char** argv) {
-	int portno = 0;
+	int commandportno = 0;
+	int dataportno = 0;
 
 	try {
-		if (argc != 3) {
-			std::cerr << "Usage: port daqaddress" << std::endl;
+		if (argc != 4) {
+			std::cerr << "Usage: command_port data_port daqaddress" << std::endl;
 			return 1;
 		}
 
-		portno = atoi(argv[1]);
+		commandportno = atoi(argv[1]);
+		dataportno = atoi(argv[2]);
 		boost::asio::io_service io_service;
-		tcp::endpoint endpoint(tcp::v4(), (portno));
-		tcp::acceptor acceptor(io_service, endpoint);
 
-		DaqHatInstrument dh(atoi(argv[2]));
+		tcp::endpoint commandendpoint(tcp::v4(), (commandportno));
+		tcp::acceptor commandacceptor(io_service, commandendpoint);
+
+		tcp::endpoint dataendpoint(tcp::v4(), (dataportno));
+		tcp::acceptor dataacceptor(io_service, dataendpoint);
+
+		DaqHatInstrument dh(atoi(argv[3]));
 		dh.open();
 
 		for (;;) {
 			std::string x;
-			tcp::iostream stream;
-			acceptor.accept(*stream.rdbuf());
-			while (stream >> x) {
+			tcp::iostream commandstream;
+			tcp::iostream datastream;
+			commandacceptor.accept(*commandstream.rdbuf());
+			while (commandstream >> x) {
 				// process the commands
 				if (x.compare(0, 5, "riepe") == 0) { // IEPE
      	           riepe(dh, &x);
@@ -102,7 +101,7 @@ int main(int argc, char** argv) {
 				}
 
 				// send reply
-				stream << x; // the endl is passed on from the source. << std::endl;
+				commandstream << x; // the endl is passed on from the source. << std::endl;
 			}
 		}
 
