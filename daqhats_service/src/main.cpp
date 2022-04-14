@@ -44,7 +44,7 @@ void rclso(DaqHatInstrument &dh, std::string* x);
 void rclsa(DaqHatInstrument &dh, std::string* x);
 void rclsy(DaqHatInstrument &dh, std::string* x);
 void wclck(DaqHatInstrument &dh, std::string* x);
-void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread* scanThread);
+void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread** scanThread);
 void wscsp(DaqHatInstrument &dh, std::string* x);
 void wsccl(DaqHatInstrument &dh, std::string* x);
 
@@ -96,10 +96,8 @@ int main(int argc, char** argv) {
 					rclsy(dh, &x);
 				} else if (x.compare(0, 5, "wclck") == 0){
 					wclck(dh, &x);
-				} else if (x.compare(0, 5, "wscst") == 0){ // scan start
-					wscst(dh, &x, &dataacceptor, scanThread);
-
-
+				} else if (x.compare(0, 5, "wscst") == 0){ // scan start (submits a stream thread)
+					wscst(dh, &x, &dataacceptor, &scanThread);
 				} else if (x.compare(0, 5, "wscsp") == 0){ // scan stop
 					wscsp(dh, &x);
 				} else if (x.compare(0, 5, "wsccl") == 0){ // scan clean
@@ -173,7 +171,7 @@ void wclck(DaqHatInstrument &dh, std::string* x) {
 	dh.setClock(source, sampleRate);
 }
 
-void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread* scanThread) {
+void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread** scanThread) {
 	uint8_t channel_mask = std::stoi(x->substr(5, 1));
 	uint32_t options = std::stoi(x->substr(6,2), nullptr, 16);
 	uint32_t samples_per_channel = std::stoi(x->substr(8));
@@ -181,10 +179,9 @@ void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, th
 
 	// This thread is launched by using
     // function pointer as callable
-	scanThread = new thread(scan, &dh, dataacceptor, samples_per_channel);
-	scanThread->detach();
-
-
+	thread* t = new thread(scan, &dh, dataacceptor, samples_per_channel);
+	t->detach();
+	*scanThread = t;
 }
 
 void wscsp(DaqHatInstrument &dh, std::string* x) {
@@ -199,6 +196,9 @@ void wsccl(DaqHatInstrument &dh, std::string* x) {
 void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, uint32_t samples_per_channel) {
 	tcp::iostream datastream;
 	dataacceptor->accept(*datastream.rdbuf());
+
+//	return; // todo remove
+
 	int num_channels = dh->scanChannelCount();
 
 	uint32_t buffer_size = samples_per_channel * num_channels;
