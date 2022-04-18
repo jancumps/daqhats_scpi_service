@@ -12,7 +12,6 @@
 #include <thread>
 #include <boost/asio.hpp>
 
-
 #include <stdlib.h>
 
 #include "DaqHatInstrument.h"
@@ -43,11 +42,11 @@ void rclso(DaqHatInstrument &dh, std::string* x);
 void rclsa(DaqHatInstrument &dh, std::string* x);
 void rclsy(DaqHatInstrument &dh, std::string* x);
 void wclck(DaqHatInstrument &dh, std::string* x);
-void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread** scanThread);
+void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, tcp::socket* datasocket, thread** scanThread);
 void wscsp(DaqHatInstrument &dh, std::string* x);
 void wsccl(DaqHatInstrument &dh, std::string* x);
 
-void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, uint32_t samples_per_channel);
+void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* datasocket,uint32_t samples_per_channel);
 
 int main(int argc, char** argv) {
 	int commandportno = 0;
@@ -67,8 +66,9 @@ int main(int argc, char** argv) {
 		tcp::endpoint commandendpoint(tcp::v4(), (commandportno));
 		tcp::acceptor commandacceptor(io_service, commandendpoint);
 
-		tcp::endpoint dataendpoint(tcp::v4(), (dataportno));
-		tcp::acceptor dataacceptor(io_service, dataendpoint);
+
+		tcp::acceptor dataacceptor(io_service, tcp::endpoint(tcp::v4(), dataportno ));
+		tcp::socket datasocket(io_service);
 
 		DaqHatInstrument dh(atoi(argv[3]));
 		dh.open();
@@ -96,11 +96,12 @@ int main(int argc, char** argv) {
 				} else if (x.compare(0, 5, "wclck") == 0){
 					wclck(dh, &x);
 				} else if (x.compare(0, 5, "wscst") == 0){ // scan start (submits a stream thread)
-					wscst(dh, &x, &dataacceptor, &scanThread);
+					wscst(dh, &x, &dataacceptor, &datasocket, &scanThread);
 				} else if (x.compare(0, 5, "wscsp") == 0){ // scan stop
 					wscsp(dh, &x);
 				} else if (x.compare(0, 5, "wsccl") == 0){ // scan clean
 					wsccl(dh, &x);
+				    datasocket.close();
 					delete scanThread;
 				}
 
@@ -170,7 +171,7 @@ void wclck(DaqHatInstrument &dh, std::string* x) {
 	dh.setClock(source, sampleRate);
 }
 
-void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, thread** scanThread) {
+void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, tcp::socket* datasocket, thread** scanThread) {
 	uint8_t channel_mask = std::stoi(x->substr(5, 1));
 	uint32_t options = std::stoi(x->substr(6,2), nullptr, 16);
 	uint32_t samples_per_channel = std::stoi(x->substr(8));
@@ -178,7 +179,7 @@ void wscst(DaqHatInstrument &dh, std::string* x, tcp::acceptor* dataacceptor, th
 
 	// This thread is launched by using
     // function pointer as callable
-	thread* t = new thread(scan, &dh, dataacceptor, samples_per_channel);
+	thread* t = new thread(scan, &dh, dataacceptor, datasocket, samples_per_channel);
 	t->detach();
 	*scanThread = t;
 }
@@ -192,41 +193,16 @@ void wsccl(DaqHatInstrument &dh, std::string* x) {
 }
 
 
-void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, uint32_t samples_per_channel) {
-	tcp::iostream datastream;
-	dataacceptor->accept(*datastream.rdbuf());
-
-//	return; // todo remove
+void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* datasocket, uint32_t samples_per_channel) {
+	dataacceptor->accept(*datasocket);
 
 	int num_channels = dh->scanChannelCount();
 
-	uint32_t buffer_size = samples_per_channel * num_channels;
-	double read_buf[buffer_size];
-	int total_samples_read = 0;
-
-	int32_t read_request_size = -1;     // read all available samples
-	double timeout = 5.0;
-
-	double scan_rate = 0;
-	bool synced = false; // not needed
-	uint8_t source = 0; // not needed
-		dh->getClock(&source, &scan_rate, &synced);
-
-    uint16_t read_status = 0;
-    uint32_t samples_read_per_channel = 0;    int result;
-
-    {
-        // Read the specified number of samples.
-        result = dh->readScan(&read_status, read_request_size,
-            timeout, read_buf, buffer_size, &samples_read_per_channel);
-
-        total_samples_read += samples_read_per_channel;
-
-        for (uint32_t i = 0; i < samples_read_per_channel; i++) {
-        	datastream << formatDouble(read_buf[i]) << std::endl;
-        }
-
-//        usleep(100000);
+    for (int i = 0; i < (int)samples_per_channel * num_channels; i++) {
+//        double val = ((rand() % 9999) - 5000) / 1000;
+        double val = (-5.0 + i*0.000001);
+        boost::asio::const_buffer buff(&val, sizeof(val));
+        datasocket->send(buff);
     }
 
 

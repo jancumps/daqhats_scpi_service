@@ -73,13 +73,11 @@ int DaqHatInstrument::startScan(uint8_t channel_mask, uint32_t samples_per_chann
 }
 
 int DaqHatInstrument::readScan(uint16_t * status, int32_t samples_per_channel, double timeout, double * buffer, uint32_t buffer_size_samples, uint32_t * samples_read_per_channel) {
-	int result = -10;
-	// todo fake data
-	return result;
+	return 0;
 }
 
 int DaqHatInstrument::scanChannelCount() {
-	return;
+	return _channel_mask == 3 ? 2 : 1;
 }
 
 int DaqHatInstrument::stopScan() {

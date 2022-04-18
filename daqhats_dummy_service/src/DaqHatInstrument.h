@@ -172,8 +172,8 @@ protected:
   uint8_t _source = 1;
   double _sampleRate = 64.0;
   uint8_t _channel_mask = 1;
-  uint32_t samples_per_channel = 0U;
-  uint32_t options = 0;
+  uint32_t _samples_per_channel = 0U;
+  uint32_t _options = 0;
 
   double* _buffer = nullptr;
 
