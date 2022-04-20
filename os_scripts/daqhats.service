@@ -1,0 +1,20 @@
+[Unit]
+Description=daqhats Service
+DefaultDependencies=no
+Requires=ifupdown-pre.service
+Wants=network.target
+After=local-fs.target network-pre.target apparmor.service systemd-sysctl.service systemd-modules-load.service ifupdown-pre.service network.target
+Before=shutdown.target
+Conflicts=shutdown.target
+[Install]
+WantedBy=multi-user.target
+WantedBy=network-online.target
+[Service]
+Type=oneshot
+#EnvironmentFile=-/etc/default/networking
+ExecStart=/home/pi/bin/daqhats_start.sh
+ExecStop=/home/pi/bin/daqhats_stop.sh
+RemainAfterExit=true
+TimeoutStartSec=5min
+#User=pi
+
