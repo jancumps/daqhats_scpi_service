@@ -16,5 +16,5 @@ ExecStart=/home/pi/bin/daqhats_start.sh
 ExecStop=/home/pi/bin/daqhats_stop.sh
 RemainAfterExit=true
 TimeoutStartSec=5min
-#User=pi
+User=pi
 
