@@ -229,9 +229,9 @@ void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* dataso
             break;
         }
 
-        total_samples_read += samples_read_per_channel;
+        total_samples_read += samples_read_per_channel * num_channels;
 
-        for (uint32_t i = 0; i < samples_read_per_channel; i++) {
+        for (uint32_t i = 0; i < samples_read_per_channel * num_channels; i++) {
             boost::asio::const_buffer buff(&read_buf[i], sizeof(double));
             datasocket->send(buff);
         }
