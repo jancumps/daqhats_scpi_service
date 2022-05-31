@@ -209,10 +209,11 @@ void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* dataso
 	double scan_rate = 0;
 	bool synced = false; // not needed
 	uint8_t source = 0; // not needed
-		dh->getClock(&source, &scan_rate, &synced);
+	dh->getClock(&source, &scan_rate, &synced);
 
     uint16_t read_status = 0;
-    uint32_t samples_read_per_channel = 0;    int result;
+    uint32_t samples_read_per_channel = 0;
+    int result;
 
     do
     {
