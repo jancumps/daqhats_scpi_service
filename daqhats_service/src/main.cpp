@@ -201,7 +201,7 @@ void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* dataso
 
 	uint32_t buffer_size = samples_per_channel * num_channels;
 	double read_buf[buffer_size];
-	int total_samples_read = 0;
+	// int total_samples_read = 0;
 
 	int32_t read_request_size = -1;     // read all available samples
 	double timeout = 5.0;
@@ -229,7 +229,7 @@ void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* dataso
             break;
         }
 
-        total_samples_read += samples_read_per_channel * num_channels;
+        // total_samples_read += samples_read_per_channel * num_channels;
 
         for (uint32_t i = 0; i < samples_read_per_channel * num_channels; i++) {
             boost::asio::const_buffer buff(&read_buf[i], sizeof(double));
