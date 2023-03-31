@@ -215,30 +215,34 @@ void scan(DaqHatInstrument* dh, tcp::acceptor* dataacceptor, tcp::socket* dataso
     uint32_t samples_read_per_channel = 0;
     int result;
 
-    do
-    {
-        // Read the specified number of samples.
-        result = dh->readScan(&read_status, read_request_size,
-            timeout, read_buf, buffer_size, &samples_read_per_channel);
-        if (read_status & STATUS_HW_OVERRUN)
-        {
-            break;
-        }
-        else if (read_status & STATUS_BUFFER_OVERRUN)
-        {
-            break;
-        }
+    try {
 
-        // total_samples_read += samples_read_per_channel * num_channels;
+    	do
+    	{
+    		// Read the specified number of samples.
+    		result = dh->readScan(&read_status, read_request_size,
+    				timeout, read_buf, buffer_size, &samples_read_per_channel);
+    		if (read_status & STATUS_HW_OVERRUN)
+    		{
+    			break;
+    		}
+    		else if (read_status & STATUS_BUFFER_OVERRUN)
+    		{
+    			break;
+    		}
 
-        for (uint32_t i = 0; i < samples_read_per_channel * num_channels; i++) {
-            boost::asio::const_buffer buff(&read_buf[i], sizeof(double));
-            datasocket->send(buff);
-        }
+    		// total_samples_read += samples_read_per_channel * num_channels;
 
+    		for (uint32_t i = 0; i < samples_read_per_channel * num_channels; i++) {
+    			boost::asio::const_buffer buff(&read_buf[i], sizeof(double));
+    			datasocket->send(buff);
+    		}
+
+    	}
+    	while ((result == RESULT_SUCCESS) &&
+    			((read_status & STATUS_RUNNING) == STATUS_RUNNING) );
+
+    } catch (std::exception& e) {
+    	std::cerr << e.what() << std::endl;
     }
-    while ((result == RESULT_SUCCESS) &&
-           ((read_status & STATUS_RUNNING) == STATUS_RUNNING) );
-
-
 }
